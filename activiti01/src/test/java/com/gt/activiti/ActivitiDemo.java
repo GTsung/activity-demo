@@ -165,4 +165,20 @@ public class ActivitiDemo {
             System.out.println("流程定義version-" + definition.getVersion());
         }
     }
+
+    /**
+     * 刪除流程部署信息
+     * 當前流程若未完成，則需要特殊方式刪除
+     */
+    @Test
+    public void deleteDeploy() {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        // 根據deployId刪除
+        String deployId = "2";
+        // 只能刪除已經完成的流程
+        repositoryService.deleteDeployment(deployId);
+        // 級聯刪除，可以刪除未完成的流程
+        repositoryService.deleteDeployment(deployId, true);
+    }
 }
