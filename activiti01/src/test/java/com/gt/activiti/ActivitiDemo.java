@@ -2,6 +2,8 @@ package com.gt.activiti;
 
 import org.activiti.engine.*;
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.junit.Test;
@@ -148,4 +150,19 @@ public class ActivitiDemo {
         taskService.complete(task.getId());
     }
 
+    @Test
+    public void testQueryProcessDefinition() {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        ProcessDefinitionQuery processDefinitionQuery = repositoryService.createProcessDefinitionQuery();
+        // 查詢當前所有的流程定義
+        List<ProcessDefinition> definitionList = processDefinitionQuery.processDefinitionKey("myEvection")
+                .orderByProcessDefinitionVersion().desc().list();
+        for (ProcessDefinition definition : definitionList) {
+            System.out.println("流程定義id-" + definition.getId());
+            System.out.println("流程定義名稱-" + definition.getName());
+            System.out.println("流程定義key-" + definition.getKey());
+            System.out.println("流程定義version-" + definition.getVersion());
+        }
+    }
 }
