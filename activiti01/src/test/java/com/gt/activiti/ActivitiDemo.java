@@ -1,13 +1,17 @@
 package com.gt.activiti;
 
 import org.activiti.engine.*;
+import org.activiti.engine.history.HistoricActivityInstance;
+import org.activiti.engine.history.HistoricActivityInstanceQuery;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
+import java.io.*;
 import java.util.List;
 
 /**
@@ -181,4 +185,59 @@ public class ActivitiDemo {
         // 級聯刪除，可以刪除未完成的流程
         repositoryService.deleteDeployment(deployId, true);
     }
+
+    /**
+     * 獲取數據庫中的資源文件，用於其他用戶查看
+     */
+    @Test
+    public void testQueryBpmnFiles() throws Exception {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        RepositoryService repositoryService = processEngine.getRepositoryService();
+        // 得到流程定義
+        ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionKey("myEvection")
+                .singleResult();
+        // 得到流程定義部署id
+        String deploymentId = definition.getDeploymentId();
+        // 獲取png和bpmn
+        InputStream pngInput = repositoryService.getResourceAsStream(deploymentId, definition.getDiagramResourceName());
+        InputStream bpmnInput = repositoryService.getResourceAsStream(deploymentId, definition.getResourceName());
+        // 輸出
+        File file_png = new File("/images/evection0.png");
+        File file_bpmn = new File("/images/evection0.bpmn");
+        FileOutputStream pngOut = new FileOutputStream(file_png);
+        FileOutputStream bpmnOut = new FileOutputStream(file_bpmn);
+        IOUtils.copy(pngInput, pngOut);
+        IOUtils.copy(bpmnInput, bpmnOut);
+
+        pngOut.close();
+        bpmnOut.close();
+        pngInput.close();
+        bpmnInput.close();
+    }
+
+    /**
+     * 查看歷史信息
+     */
+    @Test
+    public void testQueryHistory() {
+        ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
+        HistoryService historyService = processEngine.getHistoryService();
+        // actinst表的查詢對象
+        HistoricActivityInstanceQuery historicActivityInstanceQuery = historyService.createHistoricActivityInstanceQuery();
+        // 根據instanceId查詢
+        historicActivityInstanceQuery.processDefinitionId("myEvection:1:4");
+        historicActivityInstanceQuery.orderByHistoricActivityInstanceStartTime().asc();
+        List<HistoricActivityInstance> activityInstanceList = historicActivityInstanceQuery.list();
+
+        activityInstanceList.forEach(activity -> {
+            System.out.println(activity.getActivityId());
+            System.out.println(activity.getActivityName());
+            System.out.println(activity.getProcessDefinitionId());
+            System.out.println(activity.getProcessInstanceId());
+            System.out.println("<==========================>");
+        });
+    }
+
+    
 }
